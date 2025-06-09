@@ -5,76 +5,63 @@ import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 
 const CartPage = () => {
-  const {
-    cartItems,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    cartTotal,
-    checkout,
-  } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } =
+    useCart();
   const { isAuthenticated, user } = useAuth();
   const { convertProductPrice, formatPrice, currency } = useCurrency();
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Check if user is a brand
   const isBrand = isAuthenticated && user?.role === "Brand";
 
-  // Redirect non-authenticated users to login and brands to their dashboard
+  // Initialize cart data and handle redirects
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login", {
-        state: {
-          from: "/cart",
-          message: "Please log in to access your cart",
-        },
-      });
-    } else if (isBrand) {
-      navigate("/brand/dashboard", {
-        state: {
-          message: "Brands do not have access to shopping cart functionality",
-        },
-      });
-    }
+    const initializeCart = async () => {
+      try {
+        if (!isAuthenticated) {
+          navigate("/login", {
+            state: {
+              from: "/cart",
+              message: "Please log in to access your cart",
+            },
+          });
+        } else if (isBrand) {
+          navigate("/brand/dashboard", {
+            state: {
+              message:
+                "Brands do not have access to shopping cart functionality",
+            },
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeCart();
   }, [isAuthenticated, isBrand, navigate]);
 
   const handleQuantityChange = (productId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
     updateQuantity(productId, parseInt(newQuantity));
   };
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    setCheckoutError(null);
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-    try {
-      // Call the checkout method from CartContext
-      const result = await checkout();
-
-      if (result.success) {
-        // Show success message
-        alert("Checkout completed successfully! Your items will be processed.");
-
-        // Redirect to home or order confirmation page
-        navigate("/products", {
-          state: { message: "Your order has been placed successfully!" },
-        });
-      } else {
-        // Handle checkout failure
-        setCheckoutError(result.error || "Checkout failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      setCheckoutError("An unexpected error occurred. Please try again.");
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
-
-  // If not authenticated or is a brand, show loading or redirect
+  // If not authenticated or is a brand, show nothing (will redirect in useEffect)
   if (!isAuthenticated || isBrand) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   // Calculate subtotal using original prices without any conversion
@@ -327,33 +314,37 @@ const CartPage = () => {
                 })}
               </ul>
 
-              <div className="p-2 sm:p-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-between gap-2">
-                <button
-                  onClick={clearCart}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs sm:text-sm focus:outline-none flex items-center"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3 sm:h-4 sm:w-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Clear Cart
-                </button>
-                <Link
-                  to="/products"
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs sm:text-sm focus:outline-none"
-                >
-                  Continue Shopping
-                </Link>
+              <div className="p-2 sm:p-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-wrap justify-between items-center gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => clearCart()}
+                      className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Clear Cart
+                    </button>
+                    <Link
+                      to="/products"
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Continue Shopping
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -409,44 +400,13 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                  className={`w-full mt-3 sm:mt-4 py-2 px-4 rounded-md font-medium text-white text-sm sm:text-base
-                    ${
-                      checkoutLoading
-                        ? "bg-blue-400 dark:bg-blue-500 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    } transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                <Link
+                  to="/checkout"
+                  className="w-full mt-3 sm:mt-4 py-2 px-4 rounded-md font-medium text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 inline-flex items-center justify-center"
                 >
-                  {checkoutLoading ? (
-                    <span className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Processing...
-                    </span>
-                  ) : (
-                    `Checkout ${subtotal > 0 ? "- " + formatINR(subtotal) : ""}`
-                  )}
-                </button>
+                  Proceed to Checkout{" "}
+                  {subtotal > 0 ? `- ${formatINR(subtotal)}` : ""}
+                </Link>
 
                 <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {hasItemsWithPrice ? (

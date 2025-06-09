@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Loader from "../components/Loader";
+import Avatar from "../components/Avatar";
 
 const ProfilePage = () => {
   const { user, updateProfile, updatePassword, loading, error, clearError } =
@@ -99,29 +100,34 @@ const ProfilePage = () => {
           {/* Profile Image */}
           <div className="flex-shrink-0">
             <div className="relative">
-              <img
-                src={user.avatar || "https://via.placeholder.com/150?text=Avatar"}
-                alt={user.name}
-                className="w-32 h-32 rounded-full object-cover border-4 border-blue-100"
+              <Avatar
+                user={user}
+                size="lg"
+                className="border-4 border-blue-100"
               />
               <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                 {getRoleDisplayName(user.role)}
               </div>
             </div>
           </div>
-          
+
           {/* Profile Details */}
           <div className="flex-grow text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">{user.name}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {user.name}
+            </h2>
             <p className="text-gray-600 mb-2">{user.email}</p>
-            
+
             <div className="bg-gray-50 rounded-lg p-4 mt-4">
-              <h3 className="text-sm uppercase text-gray-500 font-semibold mb-2">About</h3>
+              <h3 className="text-sm uppercase text-gray-500 font-semibold mb-2">
+                About
+              </h3>
               <p className="text-gray-700 whitespace-pre-line">
-                {user.bio || "No bio information provided yet. Edit your profile to add a bio."}
+                {user.bio ||
+                  "No bio information provided yet. Edit your profile to add a bio."}
               </p>
             </div>
-            
+
             <div className="mt-4">
               <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                 <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
@@ -188,13 +194,10 @@ const ProfilePage = () => {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="md:w-1/3">
                 <div className="flex flex-col items-center">
-                  <img
-                    src={
-                      profileData.avatar ||
-                      "https://via.placeholder.com/150?text=Avatar"
-                    }
-                    alt={profileData.name}
-                    className="w-32 h-32 rounded-full object-cover mb-4"
+                  <Avatar
+                    user={{ ...user, avatar: profileData.avatar }}
+                    size="lg"
+                    className="mb-4"
                   />
                   <p className="text-sm text-gray-500 text-center">
                     {getRoleDisplayName(user.role)}

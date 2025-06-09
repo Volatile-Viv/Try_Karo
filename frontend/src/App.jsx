@@ -16,6 +16,8 @@ import ProfilePage from "./pages/ProfilePage";
 import CartPage from "./pages/CartPage";
 import BrandDashboardPage from "./pages/BrandDashboardPage";
 import TesterDashboardPage from "./pages/TesterDashboardPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 
 // Components
 import PrivateRoute from "./components/PrivateRoute";
@@ -55,6 +57,16 @@ function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/cart" element={<CartPage />} />
+                        <Route
+                          path="/checkout"
+                          element={<PrivateRoute element={<CheckoutPage />} />}
+                        />
+                        <Route
+                          path="/order-confirmation"
+                          element={
+                            <PrivateRoute element={<OrderConfirmationPage />} />
+                          }
+                        />
 
                         {/* Protected Routes */}
                         <Route

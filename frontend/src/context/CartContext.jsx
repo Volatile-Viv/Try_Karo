@@ -213,7 +213,7 @@ export const CartProvider = ({ children }) => {
   };
 
   // Process checkout and update product stock
-  const checkout = async () => {
+  const checkout = async (orderDetails) => {
     try {
       // For each product in cart, update its stock
       const updatePromises = cartItems.map((item) => {
@@ -230,10 +230,27 @@ export const CartProvider = ({ children }) => {
       // Wait for all stock updates to complete
       await Promise.all(updatePromises);
 
+      // Generate a unique order ID (timestamp + random string)
+      const orderId = `ORD-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+
+      // TODO: Save order details to backend
+      // This would typically involve an API call to save the order
+      console.log("Order details:", {
+        orderId,
+        items: cartItems,
+        total: cartTotal,
+        ...orderDetails,
+      });
+
       // Clear the cart after successful checkout
       clearCart();
 
-      return { success: true };
+      return {
+        success: true,
+        orderId,
+      };
     } catch (error) {
       console.error("Checkout error:", error);
       return {
